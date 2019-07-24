@@ -48,6 +48,9 @@ public:
 
 	void reserve(const size_t n_capacity = 10);
 
+	template<typename Func>
+	void for_each(const Func& i_func);
+
 private:
 	size_t m_capacity;
 	size_t m_size;
@@ -234,4 +237,12 @@ void MyVector<T>::reserve(const size_t n_capacity)
 	T* t = mp_array;
 	mp_array = tp_array;
 	delete[] t;
+}
+
+template<typename T>
+template<typename Func>
+void MyVector<T>::for_each(const Func& i_func)
+{
+	for (size_t i = 0; i < m_size; ++i)
+		i_func(mp_array[i]);
 }
