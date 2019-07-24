@@ -4,12 +4,16 @@ template<typename T>
 class BlockBase
 {
 public:
-	
+
 	BlockBase();
 
 	virtual T& get() = 0;
 
-	virtual void update(bool generated, bool shared) = 0;
+	virtual void check() = 0;
+
+	void updateShared(bool increase);
+
+	void updateWeak(bool increase);
 
 	virtual ~BlockBase();
 
@@ -25,6 +29,22 @@ protected:
 template<typename T>
 BlockBase<T>::BlockBase()
 { }
+
+template<typename T>
+void BlockBase<T>::updateShared(bool increase)
+{
+	increase ? ++(this->shared_counter) : --(this->shared_counter);
+	if (shared_counter == 0)
+		check();
+}
+
+template<typename T>
+void BlockBase<T>::updateWeak(bool increase)
+{
+	increase ? ++(this->weak_counter) : --(this->weak_counter);
+	if (weak_counter == 0)
+		check();
+}
 
 template<typename T>
 BlockBase<T>::~BlockBase()
@@ -60,7 +80,7 @@ public:
 
 	virtual T& get() override;
 
-	virtual void update(bool generated, bool shared) override;
+	virtual void check() override;
 
 private:
 	T* mp_data;
@@ -86,26 +106,20 @@ BlockSeparate<T>::~BlockSeparate()
 }
 
 template<typename T>
-T& BlockSeparate<T>::get() 
+T& BlockSeparate<T>::get()
 {
 	return *mp_data;
 }
 
 template<typename T>
-void BlockSeparate<T>::update(bool generated, bool shared)
+void BlockSeparate<T>::check()
 {
-	if (generated)
-		shared ? ++this->shared_counter: ++this->weak_counter;
-	else
-		shared ? --this->shared_counter : --this->weak_counter;
-
-	if (this->shared_counter == 0 && this->weak_counter != 0)
+	if (shared_counter == 0 && weak_counter != 0)
 	{
 		delete mp_data;
 		mp_data = nullptr;
 	}
-
-	if (this->shared_counter == 0 && this->weak_counter == 0)
+	if (shared_counter == 0 && weak_counter == 0)
 		delete this;
 }
 
@@ -129,7 +143,7 @@ public:
 
 	virtual T& get() override;
 
-	virtual void update(bool generated, bool shared) override;
+	virtual void check() override;
 
 private:
 	T m_data;
@@ -139,14 +153,12 @@ template<typename T>
 template<typename... Args>
 BlockNear<T>::BlockNear(Args&&... args)
 {
-	m_data = T(args...);
+	m_data = T(std::forward<Args>(args...));
 }
 
 template<typename T>
 BlockNear<T>::~BlockNear()
-{
-	~T();
-}
+{ }
 
 template<typename T>
 T& BlockNear<T>::get()
@@ -155,15 +167,10 @@ T& BlockNear<T>::get()
 }
 
 template<typename T>
-void BlockNear<T>::update(bool generated, bool shared)
+void BlockNear<T>::check()
 {
-	if (generated)
-		shared ? ++this->shared_counter : ++this->weak_counter;
-	else
-		shared ? --this->shared_counter : --this->weak_counter;
-
-	if (this->shared_counter == 0 && this->weak_counter == 0)
+	if (shared_counter == 0 && weak_counter != 0)
+		m_data.~T();
+	if (shared_counter == 0 && weak_counter == 0)
 		delete this;
-	if (this->shared_counter == 0 && this->weak_counter != 0)
-		~T();
 }

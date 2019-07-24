@@ -44,7 +44,7 @@ Weak_pointer<T>::Weak_pointer(const Weak_pointer<T>& other)
 {
 	mp_block = other.mp_block;
 	if (!expired())
-		mp_block->update(1, 0);
+		mp_block->updateWeak(true);
 }
 
 template<typename T>
@@ -57,9 +57,9 @@ template<typename T>
 void Weak_pointer<T>::setSharedPtrBlock(Shared_pointer<T>& other) const
 {
 	if (other.mp_block != nullptr)
-		other.mp_block->update(0, 1);
+		other.mp_block->updateWeak(false);
 	other.mp_block = mp_block;
-	mp_block->update(1, 1);
+	mp_block->updateShared(true);
 }
 
 template<typename T>
@@ -67,32 +67,36 @@ Weak_pointer<T>::Weak_pointer(const Shared_pointer<T>& other)
 {
 	mp_block = getSharedPtrBlock(other);
 	if (!expired())
-		mp_block->update(1, 0);
+		mp_block->updateWeak(true);
 }
 
 template<typename T>
 Weak_pointer<T>::~Weak_pointer()
 {
 	if (!expired())
-		mp_block->update(0, 0);
+		mp_block->updateWeak(false);
 	mp_block = nullptr;
 }
 
 template<typename T>
 Weak_pointer<T> Weak_pointer<T>::operator=(const Weak_pointer<T>& other)
 {
+	if (!expired())
+		mp_block->updateWeak(false);
 	mp_block = other.mp_block;
 	if (!expired())
-		mp_block->update(1, 0);
+		mp_block->updateWeak(true);
 	return *this;
 }
 
 template<typename T>
 Weak_pointer<T> Weak_pointer<T>::operator=(const Shared_pointer<T>& other)
 {
+	if (!expired())
+		mp_block->updateWeak(false);
 	mp_block = getSharedPtrBlock(other);
 	if (!expired())
-		mp_block->update(1, 0);
+		mp_block->updateWeak(true);
 	return *this;
 }
 
@@ -105,9 +109,9 @@ size_t Weak_pointer<T>::use_count() const
 template<typename T>
 void Weak_pointer<T>::swap(const Weak_pointer<T>& other)
 {
-	mp_block->update(0, 0);
+	mp_block->updateWeak(false);
 	mp_block = other.mp_block;
-	mp_block->update(1, 0);
+	mp_block->updateWeak(true);
 }
 
 template<typename T>

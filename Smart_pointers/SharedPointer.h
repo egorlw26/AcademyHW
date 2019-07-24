@@ -40,7 +40,7 @@ template<typename T>
 Shared_pointer<T>::Shared_pointer(T* data)
 {
 	mp_block = new BlockSeparate<T>(data);
-	mp_block->update(1, 1);
+	mp_block->updateShared(true);
 }
 
 template<typename T>
@@ -48,21 +48,23 @@ Shared_pointer<T>::Shared_pointer(const Shared_pointer<T>& other)
 {
 	mp_block = other.mp_block;
 	if (mp_block != nullptr)
-		mp_block->update(1, 1);
+		mp_block->updateShared(true);
 }
 
 template<typename T>
 Shared_pointer<T> Shared_pointer<T>::operator=(const Shared_pointer<T>& other)
 {
+	if (mp_block != nullptr)
+		mp_block->updateShared(false);
 	mp_block = other.mp_block;
-	mp_block->update(1, 1);
+	mp_block->updateShared(true);
 	return *this;
 }
 
 template<typename T>
 Shared_pointer<T>::~Shared_pointer()
 {
-	mp_block->update(0, 1);
+	mp_block->updateShared(false);
 	mp_block = nullptr;
 }
 
@@ -77,7 +79,6 @@ Shared_pointer<U> make_shared(Args&&... args)
 {
 	Shared_pointer<U> sp;
 	sp.mp_block = new BlockNear<U>(std::forward<Args>(args)...);
-	sp.mp_block->update(1, 1);
+	sp.mp_block->updateShared(true);
 	return sp;
 }
-
