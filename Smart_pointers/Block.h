@@ -7,7 +7,7 @@ public:
 
 	BlockBase();
 
-	virtual T& get() = 0;
+	virtual T* get() = 0;
 
 	virtual void check() = 0;
 
@@ -78,7 +78,7 @@ public:
 
 	virtual ~BlockSeparate() override;
 
-	virtual T& get() override;
+	virtual T* get() override;
 
 	virtual void check() override;
 
@@ -106,21 +106,21 @@ BlockSeparate<T>::~BlockSeparate()
 }
 
 template<typename T>
-T& BlockSeparate<T>::get()
+T* BlockSeparate<T>::get()
 {
-	return *mp_data;
+	return mp_data;
 }
 
 template<typename T>
 void BlockSeparate<T>::check()
 {
-	if (shared_counter == 0 && weak_counter != 0)
+	if (this->shared_counter == 0 && this->weak_counter != 0)
 	{
 		delete mp_data;
 		mp_data = nullptr;
 	}
-	if (shared_counter == 0 && weak_counter == 0)
-		delete this;
+	if (this->shared_counter == 0 && this->weak_counter == 0)
+		::operator delete(this);
 }
 
 
@@ -141,7 +141,7 @@ public:
 
 	virtual ~BlockNear() override;
 
-	virtual T& get() override;
+	virtual T* get() override;
 
 	virtual void check() override;
 
@@ -153,7 +153,7 @@ template<typename T>
 template<typename... Args>
 BlockNear<T>::BlockNear(Args&&... args)
 {
-	m_data = T(std::forward<Args>(args...));
+	m_data = T(std::forward<Args>(args)...);
 }
 
 template<typename T>
@@ -161,16 +161,16 @@ BlockNear<T>::~BlockNear()
 { }
 
 template<typename T>
-T& BlockNear<T>::get()
+T* BlockNear<T>::get()
 {
-	return m_data;
+	return &m_data;
 }
 
 template<typename T>
 void BlockNear<T>::check()
 {
-	if (shared_counter == 0 && weak_counter != 0)
+	if (this->shared_counter == 0 && this->weak_counter != 0)
 		m_data.~T();
-	if (shared_counter == 0 && weak_counter == 0)
-		delete this;
+	if (this->shared_counter == 0 && this->weak_counter == 0)
+		::operator delete(this);
 }
