@@ -26,8 +26,6 @@ public:
 
 	Matrix<T> operator = (const std::initializer_list<T>& list);
 
-	T& operator [](const size_t pos);
-
 	const T& operator [](const size_t pos) const;
 
 	const size_t getRows() const;
@@ -52,8 +50,12 @@ public:
 	template<typename U>
 	Matrix<decltype(std::declval<T>() + std::declval<U>())> operator - (const Matrix<U>& other) const;
 
-	/*template<typename U>
-	Matrix<decltype(std::declval<T>() + std::declval<U>())> operator * (const Matrix<U>& other) const;*/
+	template<typename U>
+	Matrix<decltype(std::declval<T>() + std::declval<U>())> operator * (const Matrix<U>& other) const;
+
+	void print() const;
+
+	T& operator [](const size_t row);
 
 private:
 	size_t m_rows;
@@ -252,10 +254,36 @@ Matrix<decltype(std::declval<T>() + std::declval<U>())> Matrix<T>::operator- (co
 	return (*this) - other;
 }
 
-//template<typename T>
-//template<typename U>
-//Matrix<decltype(std::declval<T>() + std::declval<U>())> Matrix<T>::operator * (const Matrix<U>& other) const
-//{
-//	Matrix<decltype(std::declval<T>() + std::declval<U>())> ans(m_rows, other.getColumns());
-//
-//}
+template<typename T>
+template<typename U>
+Matrix<decltype(std::declval<T>() + std::declval<U>())> Matrix<T>::operator * (const Matrix<U>& other) const
+{
+	if (m_rows != other.getColumns())
+		throw 1;
+
+	Matrix<decltype(std::declval<T>() + std::declval<U>())> ans(m_rows, other.getColumns());
+	for (size_t i = 0; i < m_rows; ++i)
+	{
+		for (size_t j = 0; j < other.getColumns(); ++j)
+		{
+			T sum = 0;
+			for (size_t k = 0; k < m_columns; )
+				for (size_t l = 0; l < other.getRows(); ++l, ++k)
+					sum += mp_cells[i*m_columns + k] * other.getCells()[l*other.getColumns() + j];
+			ans[i*other.getColumns() + j] = sum;
+		}
+	}
+
+	return ans;
+}
+
+template<typename T>
+void Matrix<T>::print() const
+{
+	for (size_t i = 0; i < m_rows; ++i)
+	{
+		for (size_t j = 0; j < m_columns; ++j)
+			cout << mp_cells[i*m_columns + j] << ' ';
+		cout << endl;
+	}
+}
