@@ -213,7 +213,10 @@ template<typename T>
 template<class... Args>
 void MyVector<T>::emplace_back(Args&&... args)
 {
-	push_back(T(std::forward<Args>(args)...));
+	if (m_size == m_capacity)
+		reserve(m_size + 1);
+	new (mp_array + m_size) T(args...);
+	++m_size;
 }
 
 template<typename T>
@@ -231,7 +234,7 @@ void MyVector<T>::reserve(const size_t n_capacity)
 	if (n_capacity < m_size)
 		throw 1;
 	m_capacity = n_capacity;
-	T* tp_array = (T*)new char[n_capacity * sizeof(T)];
+	T* tp_array = (T*)malloc(n_capacity * sizeof(T));
 	for (size_t i = 0; i < m_size; ++i)
 		tp_array[i] = std::move(mp_array[i]);
 	T* t = mp_array;
