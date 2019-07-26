@@ -62,6 +62,8 @@ public:
 	template<typename U>
 	Matrix<decltype(std::declval<T>() / std::declval<U>())> operator / (const U& value) const;
 
+	static Matrix identity(const size_t size);
+
 	void print() const;
 
 private:
@@ -309,6 +311,16 @@ Matrix<decltype(std::declval<T>() / std::declval<U>())> Matrix<T>::operator/ (co
 {
 	for (size_t i = 0; i < m_rows * m_columns; ++i)
 		mp_cells[i] /= value;
+}
+
+template<typename T>
+Matrix<T> Matrix<T>::identity(const size_t size)
+{
+	Matrix<T> ans(size, size);
+	for (size_t i = 0; i < size; ++i)
+		for (size_t j = 0; j < size; ++j)
+			ans[i][j] = (int)(i == j);
+	return ans;
 }
 
 template<typename T>
