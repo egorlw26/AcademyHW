@@ -1,12 +1,7 @@
 #include <iostream>
 #include <fstream>
-#include <cmath>
-#include <vector>
 #include <string>
-#include <random>
-#include <time.h>
 #include <atomic>
-#include <ctime>
 #include <thread>
 #include <mutex>
 
@@ -16,9 +11,6 @@ public:
 	ParallelLogger(const std::string& file_name);
 	void LogMutex(const std::string& str);
 	void LogCallOnce(const std::string& str);
-	std::string GetFileName() const;
-	std::mutex& GetMutex() { return m_mutex; };
-	std::ofstream& GetOfS() { return m_ofs; };
 	~ParallelLogger();
 private:
 	std::string m_file_name;
@@ -52,20 +44,15 @@ void ParallelLogger::LogMutex(const std::string& str)
 
 void ParallelLogger::LogCallOnce(const std::string& str)
 {
-	std::call_once(m_flag, [this] 
+	std::call_once(m_flag, [this]
 	{
-		this->GetOfS().open(this->GetFileName()); 
-		std::lock_guard<std::mutex> guard(this->GetMutex());
-		this->GetOfS() << "CallOnce\n"; 
+		this->m_ofs.open(this->m_file_name);
+		std::lock_guard<std::mutex> guard(this->m_mutex);
+		this->m_ofs << "CallOnce\n";
 	});
 
 	std::lock_guard<std::mutex> guard(m_mutex);
 	m_ofs << str << std::endl;
-}
-
-std::string ParallelLogger::GetFileName() const
-{
-	return m_file_name;
 }
 
 int main()
