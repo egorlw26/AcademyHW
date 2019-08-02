@@ -24,7 +24,10 @@ ParallelLogger::ParallelLogger(const std::string& file_name)
 {};
 
 ParallelLogger::~ParallelLogger()
-{};
+{
+	if (m_ofs.is_open())
+		m_ofs.close();
+};
 
 void ParallelLogger::LogMutex(const std::string& str)
 {
@@ -37,7 +40,6 @@ void ParallelLogger::LogMutex(const std::string& str)
 			m_ofs << "Mutex\n";
 		}
 	}
-
 	std::lock_guard<std::mutex> guard(m_mutex);
 	m_ofs << str << std::endl;
 }
@@ -58,7 +60,6 @@ void ParallelLogger::LogCallOnce(const std::string& str)
 int main()
 {
 	ParallelLogger pl("test.txt");
-
 
 	std::thread th([&pl]
 	{
