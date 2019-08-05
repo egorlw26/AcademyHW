@@ -19,7 +19,7 @@ public:
 	ThreadPool(const size_t size = 0);
 
 	template<typename Func, typename... Args>
-	std::future<typename std::result_of<Func(Args...)>::type> ToDo(Func&& i_func, Args&&... i_args);
+		std::future<typename std::result_of<Func(Args...)>::type> ToDo(Func&& i_func, Args&&... i_args);
 
 	~ThreadPool();
 
@@ -36,7 +36,7 @@ private:
 };
 
 template<typename Func, typename... Args>
-std::future<typename std::result_of<Func(Args...)>::type> ThreadPool::ToDo(Func&& i_func, Args&&... i_args)
+	std::future<typename std::result_of<Func(Args...)>::type> ThreadPool::ToDo(Func&& i_func, Args&&... i_args)
 {
 	using r_type = typename std::result_of<Func(Args...)>::type;
 
@@ -44,9 +44,10 @@ std::future<typename std::result_of<Func(Args...)>::type> ThreadPool::ToDo(Func&
 
 	std::future<r_type> res_f = task->get_future();
 
-	std::unique_lock<std::mutex> u_lock(m_tasks_mutex);
-	m_tasks.push([task, i_func, i_args...]{ task->set_value(i_func(i_args...)); });
-	u_lock.unlock();
+	{
+		std::unique_lock<std::mutex> u_lock(m_tasks_mutex);
+		m_tasks.push([task, i_func, i_args...]{ task->set_value(i_func(i_args...)); });
+	}
 
 	m_cond_var.notify_one();
 	return res_f;
