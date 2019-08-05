@@ -45,9 +45,15 @@ ThreadPool::ThreadPool(const size_t size)
 	}
 }
 
-std::future<void> ThreadPool::ToDo(const std::function<void>& i_func)
+void ThreadPool::Log(const std::string& i_message)
 {
+	m_log_mutex.lock();
+	std::cout << i_message << std::endl;
+	m_log_mutex.unlock();
+}
 
+std::future<void> ThreadPool::ToDo(const std::function<void()>& i_func)
+{
 	auto task = std::make_shared<std::promise<void>>();
 
 	std::future<void> res_f = task->get_future();
@@ -59,13 +65,6 @@ std::future<void> ThreadPool::ToDo(const std::function<void>& i_func)
 
 	m_cond_var.notify_one();
 	return res_f;
-}
-
-void ThreadPool::Log(const std::string& i_message)
-{
-	m_log_mutex.lock();
-	std::cout << i_message << std::endl;
-	m_log_mutex.unlock();
 }
 
 ThreadPool::~ThreadPool()

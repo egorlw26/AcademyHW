@@ -18,11 +18,10 @@ class ThreadPool
 public:
 	ThreadPool(const size_t size = 0);
 
-	template<typename Func, typename... Args, typename =
-		std::enable_if_t < !std::is_same_v < std::result_of<Func()>, void>>
-	std::future<typename std::result_of<Func(Args...)>::type> ToDo(Func&& i_func, Args&&... i_args);
+	std::future<void> ToDo(const std::function<void()>& i_func);
 
-	std::future<void> ToDo(const std::function<void>& i_func);
+	template<typename Func, typename... Args, typename = std::enable_if_t<!std::is_void<Func(Args...)>::value>>
+	std::future<typename std::result_of<Func(Args...)>::type> ToDo(Func&& i_func, Args&&... i_args);
 
 	~ThreadPool();
 
@@ -38,8 +37,7 @@ private:
 
 };
 
-template<typename Func, typename... Args, , typename =
-	std::enable_if_t < !std::is_same_v < std::result_of<Func()>, void>>
+template<typename Func, typename... Args, typename = std::enable_if_t<!std::is_void<Func(Args...)>::value>>
 std::future<typename std::result_of<Func(Args...)>::type> ThreadPool::ToDo(Func&& i_func, Args&&... i_args)
 {
 	using r_type = typename std::result_of<Func(Args...)>::type;
