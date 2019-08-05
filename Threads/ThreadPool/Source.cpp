@@ -11,34 +11,31 @@
 #include <thread>
 #include <mutex>
 
-int test()
-{
-	return 0;
-}
 
 int main()
 {
 	{
 		ThreadPool pool(4);
-		std::vector< std::future<void> > results;
+		std::vector< std::future<int> > results;
 
 		for (int i = 0; i < 4; ++i) {
 			results.emplace_back(pool.ToDo([i] {
 				std::this_thread::sleep_for(std::chrono::seconds(2));
+				return i * i;
 			})
 			);
 		}
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(3000));
 
-		/*for (int i = 0; i < 4; ++i) {
+		for (int i = 0; i < 4; ++i) {
 			results.emplace_back(
 				pool.ToDo([i] {
 				std::this_thread::sleep_for(std::chrono::seconds(2));
 				return i * i;
 			})
 			);
-		}*/
+		}
 
 		for (auto && result : results)
 			result.get();

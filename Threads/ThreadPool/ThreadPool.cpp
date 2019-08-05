@@ -60,7 +60,7 @@ std::future<void> ThreadPool::ToDo(const std::function<void()>& i_func)
 
 	{
 		std::unique_lock<std::mutex> u_lock(m_tasks_mutex);
-		m_tasks.push([task]{ task->set_value(); });
+		m_tasks.push([task, i_func] { i_func(); task->set_value(); });
 	}
 
 	m_cond_var.notify_one();

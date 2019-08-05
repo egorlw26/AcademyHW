@@ -20,7 +20,7 @@ public:
 
 	std::future<void> ToDo(const std::function<void()>& i_func);
 
-	template<typename Func, typename... Args, typename = std::enable_if_t<!std::is_void<Func(Args...)>::value>>
+	template<typename Func, typename... Args, typename = std::enable_if_t<std::is_integral<std::result_of_t<Func(Args...)>>::value>>
 	std::future<typename std::result_of<Func(Args...)>::type> ToDo(Func&& i_func, Args&&... i_args);
 
 	~ThreadPool();
@@ -37,9 +37,10 @@ private:
 
 };
 
-template<typename Func, typename... Args, typename = std::enable_if_t<!std::is_void<Func(Args...)>::value>>
+template<typename Func, typename... Args, typename = std::enable_if_t<std::is_integral<std::result_of_t<Func(Args...)>>::value>>
 std::future<typename std::result_of<Func(Args...)>::type> ThreadPool::ToDo(Func&& i_func, Args&&... i_args)
 {
+
 	using r_type = typename std::result_of<Func(Args...)>::type;
 
 	auto task = std::make_shared<std::promise<r_type>>();
@@ -48,7 +49,7 @@ std::future<typename std::result_of<Func(Args...)>::type> ThreadPool::ToDo(Func&
 
 	{
 		std::unique_lock<std::mutex> u_lock(m_tasks_mutex);
-		m_tasks.push([task, i_func, i_args...]{ task->set_value(i_func(i_args...)); });
+		m_tasks.push([task, i_func, i_args...]{ task->set_value(i_func(std::forward<Args...>(i_args)...)); });
 	}
 
 	m_cond_var.notify_one();
