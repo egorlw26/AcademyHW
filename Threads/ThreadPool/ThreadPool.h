@@ -20,7 +20,7 @@ public:
 
 	std::future<void> ToDo(const std::function<void()>& i_func);
 
-	template<typename Func, typename... Args, typename = std::enable_if_t<std::is_integral<std::result_of_t<Func(Args...)>>::value>>
+	template<typename Func, typename... Args, typename = std::enable_if_t<!std::is_void<std::result_of_t<Func(Args...)>>::value>>
 	std::future<typename std::result_of<Func(Args...)>::type> ToDo(Func&& i_func, Args&&... i_args);
 
 	~ThreadPool();
@@ -37,7 +37,7 @@ private:
 
 };
 
-template<typename Func, typename... Args, typename = std::enable_if_t<std::is_integral<std::result_of_t<Func(Args...)>>::value>>
+template<typename Func, typename... Args, typename = std::enable_if_t<!std::is_void<std::result_of_t<Func(Args...)>>::value>>
 std::future<typename std::result_of<Func(Args...)>::type> ThreadPool::ToDo(Func&& i_func, Args&&... i_args)
 {
 
