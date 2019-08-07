@@ -1,12 +1,14 @@
 #pragma once
 #include <functional>
 #include <memory>
+#include <string>
 #include <map>
 
 class InterfaceFactory
 {
+public:
 	template<typename TInterface>
-	inline bool IsRegistered() const;
+	inline bool IsRegistered() const noexcept;
 
 	template<typename TInterface, typename TImplementation>
 	inline void Register();
@@ -26,11 +28,5 @@ class InterfaceFactory
 	static InterfaceFactory& Instance();
 
 private:
-	std::map<std::type_info, std::type_info> m_map;
+	std::map<> m_map; //Need to save interface & implement
 };
-
-InterfaceFactory& InterfaceFactory::Instance()
-{
-	InterfaceFactory m_if;
-	return m_if;
-}
