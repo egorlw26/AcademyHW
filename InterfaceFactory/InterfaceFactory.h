@@ -6,6 +6,20 @@
 
 class InterfaceFactory
 {
+	struct TypeBase
+	{
+		virtual void* GetPointer() = 0;
+	};
+
+	template<template Type>
+	struct WrapperTypeBase : TypeBase
+	{
+		void* GetPointer() final
+		{
+			return new Type();
+		}
+	};
+
 public:
 	template<typename TInterface>
 	inline bool IsRegistered() const noexcept;
@@ -28,5 +42,4 @@ public:
 	static InterfaceFactory& Instance();
 
 private:
-	std::map<> m_map; //Need to save interface & implement
-};
+	std::map<std::string, TypeBase*> m_map;};
