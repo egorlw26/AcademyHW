@@ -21,14 +21,28 @@ class InterfaceFactory
 	};
 
 public:
+
+	struct ScopeRegister
+	{
+		ScopeRegister() = default;
+		~ScopeRegister()
+		{
+			Instance().m_map.erase(m_TInterface_string);
+		}
+		std::string& GetString() { return m_TInterface_string; }
+	private:
+		std::string m_TInterface_string;
+	};
+
+
 	template<typename TInterface>
 	inline bool IsRegistered() const noexcept;
 
 	template<typename TInterface, typename TImplementation>
 	inline void Register();
 
-	template<typename TInterface>
-	inline void Register(std::function<std::unique_ptr<TInterface>()> i_create_proc);
+	template<typename TInterface, typename TImplementation>
+	inline void Register(ScopeRegister& i_sr);
 
 	template<typename TInterface>
 	inline void Unregister();
@@ -65,12 +79,18 @@ void InterfaceFactory::Register()
 		throw std::exception("You've already registered this Interface\n");
 }
 
-template<typename TInterface>
-void InterfaceFactory::Register(std::function<std::unique_ptr<TInterface>()> i_create_proc)
+template<typename TInterface, typename TImplementation>
+void InterfaceFactory::Register(InterfaceFactory::ScopeRegister& i_sr)
 {
 	if (!Instance().IsRegistered<TInterface>())
 	{
-		//Need to get Implement from std::function
+		if (std::is_base_of<TInterface, TImplementation>::value)
+		{
+			m_map[typeid(TInterface).name()] = new WrapperTypeBase<TImplementation>();
+			i_sr.GetString() = typeid(TInterface).name();
+		}
+		else
+			throw std::exception("You've used Implementaton of wrong Interface\n");
 	}
 	else
 		throw std::exception("You've already registered this Interface\n");
@@ -85,11 +105,17 @@ void InterfaceFactory::Unregister()
 template<typename TInterface>
 std::unique_ptr<TInterface> InterfaceFactory::Create() const
 {
-	return std::unique_ptr<TInterface>((TInterface*)m_map.at(typeid(TInterface).name())->GetPointer());
+	if (Instance().IsRegistered<TInterface>())
+		return std::unique_ptr<TInterface>((TInterface*)m_map.at(typeid(TInterface).name())->GetPointer());
+	else
+		throw std::exception("This Interface wasn't registered!\n");
 }
 
 template<typename TInterface>
 TInterface* InterfaceFactory::CreateRaw() const
 {
-	return (TInterface*)m_map.at(typeid(TInterface).name())->GetPointer();
+	if (Instance().IsRegistered<TInterface>())
+		return (TInterface*)m_map.at(typeid(TInterface).name())->GetPointer();
+	else
+		throw std::exception("This Interface wasn't registered!\n");
 }
