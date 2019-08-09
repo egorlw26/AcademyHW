@@ -11,7 +11,7 @@ class InterfaceFactory
 		virtual void* GetPointer() = 0;
 	};
 
-	template<template Type>
+	template<typename Type>
 	struct WrapperTypeBase : TypeBase
 	{
 		void* GetPointer() final
@@ -42,4 +42,55 @@ public:
 	static InterfaceFactory& Instance();
 
 private:
-	std::map<std::string, TypeBase*> m_map;};
+	std::map<std::string, TypeBase*> m_map;
+};
+
+template<typename TInterface>
+bool InterfaceFactory::IsRegistered() const noexcept
+{
+	return m_map.find(typeid(TInterface).name()) != m_map.end();
+}
+
+template<typename TInterface, typename TImplementation>
+void InterfaceFactory::Register()
+{
+	if (!Instance().IsRegistered<TInterface>())
+	{
+		if (std::is_base_of<TInterface, TImplementation>::value)
+			m_map[typeid(TInterface).name()] = new WrapperTypeBase<TImplementation>();
+		else
+			throw std::exception("You've used Implementaton of wrong Interface\n");
+	}
+	else
+		throw std::exception("You've already registered this Interface\n");
+}
+
+template<typename TInterface>
+void InterfaceFactory::Register(std::function<std::unique_ptr<TInterface>()> i_create_proc)
+{
+	if (Instance().IsRegistered<TInterface>())
+	{
+		using type = std::remove_pointer<>::type;
+		m_map[typeid(TInterface).name()] = new WrapperTypeBase<type>();
+	}
+	else
+		throw std::exception("You've already registered this Interface\n");
+}
+
+template<typename TInterface>
+void InterfaceFactory::Unregister()
+{
+	m_map.erase(typeid(TInterface).name());
+}
+
+template<typename TInterface>
+std::unique_ptr<TInterface> InterfaceFactory::Create() const
+{
+	return std::unique_ptr<TInterface>((TInterface*)m_map.at(typeid(TInterface).name())->GetPointer());
+}
+
+template<typename TInterface>
+TInterface* InterfaceFactory::CreateRaw() const
+{
+	return (TInterface*)m_map.at(typeid(TInterface).name())->GetPointer();
+}
