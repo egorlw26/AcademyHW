@@ -68,10 +68,9 @@ void InterfaceFactory::Register()
 template<typename TInterface>
 void InterfaceFactory::Register(std::function<std::unique_ptr<TInterface>()> i_create_proc)
 {
-	if (Instance().IsRegistered<TInterface>())
+	if (!Instance().IsRegistered<TInterface>())
 	{
-		using type = std::remove_pointer<>::type;
-		m_map[typeid(TInterface).name()] = new WrapperTypeBase<type>();
+		//Need to get Implement from std::function
 	}
 	else
 		throw std::exception("You've already registered this Interface\n");
