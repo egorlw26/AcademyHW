@@ -33,7 +33,7 @@ public:
 		void CheckBusy()
 		{
 			for (int i = 0; i < mc_number / 8; ++i)
-				if ((int)m_bits[i] != 255)
+				if (static_cast<int>(m_bits[i]) != 255)
 				{
 					busy = false;
 					return;
@@ -67,12 +67,12 @@ public:
 		{
 			for (size_t i = 0; i < mc_number / 8; ++i)
 			{
-				if ((int)m_bits[i] != 255)
+				if (static_cast<int>(m_bits[i]) != 255)
 					for (size_t j = 0; j < 8; ++j)
 						if ((m_bits[i] & (1 << j)) == 0)
 							return i * 8 + j;
 			}
-			return -1;
+			throw 1;
 		}
 
 		const size_t m_size;
@@ -100,55 +100,57 @@ public:
 			c_size *= 2;
 		}
 
-			if (mp_head == nullptr)
+		if (mp_head == nullptr)
+		{
+			if ((char*)mp_end_buffer - (char*)mp_start_buffer >= sizeof(Header) + c_size * mc_number)
 			{
-				if ((char*)mp_end_buffer - (char*)mp_start_buffer >= sizeof(Header) + c_size * mc_number)
-				{
-					mp_head = new(mp_start_buffer) Header(c_size);
-					mp_head->ChangeBit(0);
-					return (char*)mp_head + sizeof(Header);
-				}
-				throw 1;
+				mp_head = new(mp_start_buffer) Header(c_size);
+				mp_head->ChangeBit(0);
+				return (char*)mp_head + sizeof(Header);
+			}
+			throw 1;
+		}
+
+		Header *p_cur = mp_head;
+		bool found = false;
+		while (true)
+		{
+			if (p_cur->m_size != c_size && p_cur->mp_next != nullptr  || 
+				p_cur->m_size == c_size && p_cur->busy == true && p_cur->mp_next != nullptr)
+			{
+				p_cur = p_cur->mp_next;
+				continue;
 			}
 
-			Header *p_cur = mp_head;
-			bool found = false;
-			while (true)
+			if (p_cur->m_size == c_size && p_cur->busy == false)
 			{
-				if (p_cur->m_size != c_size && p_cur->mp_next != nullptr)
-				{
-					p_cur = p_cur->mp_next;
-					continue;
-				}
-
-				if (p_cur->m_size == c_size && p_cur->busy == false)
-				{
-					found = true;
-					break;
-				}
-
+				found = true;
 				break;
 			}
 
-			if (!found)
+
+			break;
+		}
+
+		if (!found)
+		{
+			p_cur = mp_head;
+			while (p_cur->mp_next != nullptr)
+				p_cur = p_cur->mp_next;
+
+			if ((char*)mp_end_buffer - (char*)p_cur - sizeof(Header) - p_cur->m_size*mc_number >= sizeof(Header) + c_size * mc_number)
 			{
-				p_cur = mp_head;
-				while (p_cur->mp_next != nullptr)
-					p_cur = p_cur->mp_next;
-
-				if ((char*)mp_end_buffer - (char*)p_cur - sizeof(Header) - p_cur->m_size*mc_number >= sizeof(Header) + c_size * mc_number)
-				{
-					Header* nH = new((char*)p_cur + sizeof(Header) + p_cur->m_size*mc_number) Header(c_size);
-					nH->ChangeBit(0);
-					p_cur->mp_next = nH;
-					return (char*)nH + sizeof(Header);
-				}
-				throw 1;
+				Header* nH = new((char*)p_cur + sizeof(Header) + p_cur->m_size*mc_number) Header(c_size);
+				nH->ChangeBit(0);
+				p_cur->mp_next = nH;
+				return (char*)nH + sizeof(Header);
 			}
+			throw 1;
+		}
 
-			int pos = p_cur->FindFree();
-			p_cur->ChangeBit(pos);
-			return (char*)p_cur + sizeof(Header) + pos * p_cur->m_size;
+		int pos = p_cur->FindFree();
+		p_cur->ChangeBit(pos);
+		return (char*)p_cur + sizeof(Header) + pos * p_cur->m_size;
 	}
 
 	void Deallocate(const void* pointer)
@@ -218,4 +220,12 @@ void TestAllocator(MyAllocator& al, const size_t num_of_iterat)
 			}
 		}
 	}
+}
+
+int main()
+{
+	MyAllocator test(20000000);
+	TestAllocator(test, 50000);
+	system("pause");
+	return 0;
 }
