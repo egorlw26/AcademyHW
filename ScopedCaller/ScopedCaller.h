@@ -6,6 +6,8 @@ public:
 	typedef void(*return_f)();
 
 	ScopedCaller(void(*func)()) : mp_caller(new Caller(func)) {};
+	
+	ScopedCaller(const ScopedCaller&) = delete;
 
 	ScopedCaller(const ScopedCaller& other) noexcept
 	{
