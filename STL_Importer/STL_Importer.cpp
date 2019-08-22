@@ -7,7 +7,7 @@ STL_Importer::STL_Importer():
 {
 }
 
-void STL_Importer::Import(const std::string& i_file_path)
+void STL_Importer::Import(const std::string& i_file_path, std::vector<Face>& o_vector)
 {
 	std::ifstream in(i_file_path);
 	if (in.is_open())
@@ -32,7 +32,7 @@ void STL_Importer::Import(const std::string& i_file_path)
 
 			if (input != "facet")
 				throw std::exception("Something wrong while file reading!\n");
-			STL_Importer::Face t_face;
+			Face t_face;
 			
 			//Can include normal for face
 			std::getline(in, input);
@@ -67,7 +67,7 @@ void STL_Importer::Import(const std::string& i_file_path)
 					throw std::exception("Something wrong while file reading!\n");
 				std::array<float, 3> vertex;
 				in >> vertex[0] >> vertex[1] >> vertex[2];
-				t_face.m_vertexs[i] = vertex;
+				t_face.m_triangle[i] = vertex;
 			}
 			in >> input;
 			if(input != "endloop" && input != "\tendloop")
@@ -75,23 +75,11 @@ void STL_Importer::Import(const std::string& i_file_path)
 			in >> input;
 			if(input != "endfacet")
 				throw std::exception("Something wrong while file reading!\n");
-			m_faces.push_back(t_face);
-
+			o_vector.push_back(t_face);
 		}
-
 	}
 	else
 		throw std::exception("Wrong file path, check it again, please!\n");
-}
-
-const std::vector<STL_Importer::Face>& STL_Importer::GetFaces() const
-{
-	return m_faces;
-}
-
-std::vector<STL_Importer::Face>& STL_Importer::GetFaces()
-{
-	return m_faces;
 }
 
 STL_Importer::~STL_Importer()
