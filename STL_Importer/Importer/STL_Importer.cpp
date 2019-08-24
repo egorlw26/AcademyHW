@@ -3,11 +3,11 @@
 #include "STL_Importer.h"
 
 STL_Importer::STL_Importer():
-	m_name(""), m_faces()
+	m_name("")
 {
 }
 
-void STL_Importer::Import(const std::string& i_file_path, std::vector<Face>& o_vector)
+void STL_Importer::Import(const std::string& i_file_path, std::vector<Face>& o_faces, std::vector<Point>& o_vertexs)
 {
 	std::ifstream in(i_file_path);
 	if (in.is_open())
@@ -67,7 +67,14 @@ void STL_Importer::Import(const std::string& i_file_path, std::vector<Face>& o_v
 					throw std::exception("Something wrong while file reading!\n");
 				std::array<float, 3> vertex;
 				in >> vertex[0] >> vertex[1] >> vertex[2];
-				t_face.m_triangle[i] = vertex;
+				auto pos = std::find(o_vertexs.begin(), o_vertexs.end(), vertex);
+				if (pos != o_vertexs.end())
+					t_face.m_triangle[i] = pos - o_vertexs.begin();
+				else
+				{
+					o_vertexs.push_back(vertex);
+					t_face.m_triangle[i] = o_vertexs.size() - 1;
+				}
 			}
 			in >> input;
 			if(input != "endloop" && input != "\tendloop")
@@ -75,7 +82,7 @@ void STL_Importer::Import(const std::string& i_file_path, std::vector<Face>& o_v
 			in >> input;
 			if(input != "endfacet")
 				throw std::exception("Something wrong while file reading!\n");
-			o_vector.push_back(t_face);
+			o_faces.push_back(t_face);
 		}
 	}
 	else
