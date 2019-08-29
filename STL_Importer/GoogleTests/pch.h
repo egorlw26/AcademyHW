@@ -6,4 +6,4 @@
 #pragma once
 
 #include "gtest/gtest.h"
-#include "../STL_Importer/STL_Importer.h"
+#include <STL_Importer/STL_Importer.h>

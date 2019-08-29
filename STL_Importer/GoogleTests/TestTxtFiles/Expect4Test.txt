@@ -1,7 +1,7 @@
 solid cube_corner
   facet normal 0.0 -1.0 0.0
 	outer loop
-	  vertex 0.0 0.0 0.0
+	  vertex 15.78 20.32 1.5
 	  vertex 1.0 0.0 0.0
 	  vertex 0.0 0.0 1.0
 	endloop
@@ -15,7 +15,7 @@ solid cube_corner
   endfacet
   facet normal -1.0 0.0 0.0
 	outer loop
-	  vertex 0.0 0.0 0.0
+	  vertex 15.78 20.32 1.5
 	  vertex 0.0 0.0 1.0
 	  vertex 0.0 1.0 0.0
 	endloop
